@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Турнирная Сетка (Admin Only)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: #1e293b;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+            z-index: 10;
+            transition: border-color 0.3s;
+        }
+        .header.admin-active { border-color: #10b981; }
+        .header h1 { font-size: 1.3rem; color: #fbbf24; text-transform: uppercase; letter-spacing: 1px; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        .controls select {
+            background: #0f172a; color: #fbbf24; border: 2px solid #fbbf24;
+            padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+        }
+        .btn-auth {
+            background: #334155; color: #e2e8f0; border: 2px solid #475569;
+            padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-auth:hover { background: #475569; }
+        .btn-auth.admin { background: #10b981; border-color: #10b981; color: #fff; }
+        
+        .scroll-area { flex: 1; overflow: auto; position: relative; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
+        .bracket { position: relative; display: flex; align-items: center; justify-content: center; min-width: max-content; padding: 40px; gap: 60px; }
+        .lines-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .line { stroke: #475569; stroke-width: 2; fill: none; transition: stroke 0.3s; }
+        .line.active { stroke: #10b981; stroke-width: 3; }
+        .side { display: flex; gap: 60px; }
+        .side.right { flex-direction: row-reverse; }
+        .round-col { display: flex; flex-direction: column; justify-content: space-around; width: 220px; min-height: 100%; }
+        
+        .match {
+            background: #1e293b; border: 2px solid #334155; border-radius: 10px; padding: 12px;
+            position: relative; z-index: 2; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .match:hover { border-color: #3b82f6; transform: translateY(-2px); }
+        .match.winner { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        .match.final { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
+        
+        .player {
+            display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 4px 0;
+            background: #0f172a; border-radius: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .player:hover { background: #1e293b; }
+        .player.winner { background: #10b981; color: white; font-weight: bold; }
+        .player.loser { opacity: 0.5; }
+        .player.locked { cursor: not-allowed; opacity: 0.8; }
+        
+        .player input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 14px; }
+        .player input::placeholder { color: #64748b; }
+        .player input:read-only { color: #6ee7b7; font-weight: 600; cursor: not-allowed; }
+        
+        .score { font-size: 11px; font-weight: bold; padding: 2px 6px; background: #334155; border-radius: 4px; min-width: 36px; text-align: center; }
+        .player.winner .score { background: #065f46; color: #6ee7b7; }
+        
+        .center-stage { display: flex; flex-direction: column; align-items: center; gap: 30px; min-width: 240px; z-index: 2; }
+        .champion-box {
+            background: linear-gradient(135deg, #fbbf24, #d97706); padding: 20px; border-radius: 12px;
+            text-align: center; width: 220px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: scale(0); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .champion-box.visible { transform: scale(1); }
+        .crown { font-size: 36px; margin-bottom: 8px; }
+        .champ-label { color: #78350f; font-weight: bold; text-transform: uppercase; font-size: 11px; }
+        .champ-name { color: #fff; font-size: 22px; font-weight: 900; }
+        
+        @media (max-width: 768px) {
+            .bracket { gap: 30px; padding: 20px; }
+            .round-col { width: 180px; }
+            .header { flex-direction: column; gap: 10px; text-align: center; }
+        }
+        @media (max-width: 480px) {
+            .round-col { width: 150px; }
+            .player input { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="header">
+        <h1>🏆 Турнирная Сетка</h1>
+        <div class="controls">
+            <select id="sizeSelect" onchange="changeSize()">
+                <option value="8">8 Игроков</option>
+                <option value="16" selected>16 Игроков</option>
+                <option value="32">32 Игрока</option>
+            </select>
+            <button id="authBtn" class="btn-auth">🔐 Войти</button>
+        </div>
+    </div>
+
+    <div class="scroll-area">
+        <div class="bracket" id="bracket">
+            <svg class="lines-svg" id="linesSvg"></svg>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        // ⚠️ ВСТАВЬ СЮДА СВОЙ FIREBASE CONFIG
+        const firebaseConfig = {
+			apiKey: "AIzaSyCHO2OaGHft4D6HQ-hzqboSRTWtBMwrfGE",
+			authDomain: "tournet-e1f64.firebaseapp.com",
+			databaseURL: "https://tournet-e1f64-default-rtdb.firebaseio.com",
+			projectId: "tournet-e1f64",
+			storageBucket: "tournet-e1f64.firebasestorage.app",
+			messagingSenderId: "568299525691",
+			appId: "1:568299525691:web:fc74bc870f2f9477b5ae1e"
+		};
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+        const dbRef = ref(db, 'tournament_bracket');
+
+        const CONFIG = { 8: [2, 1], 16: [4, 2, 1], 32: [8, 4, 2, 1] };
+        let currentSize = 16;
+        let isAdmin = false;
+        let isSyncing = false;
+
+        // 🔐 Управление авторизацией
+        onAuthStateChanged(auth, (user) => {
+            isAdmin = !!user;
+            const btn = document.getElementById('authBtn');
+            const header = document.getElementById('header');
+            
+            btn.textContent = isAdmin ? '🔓 Выйти' : '🔐 Войти';
+            btn.className = isAdmin ? 'btn-auth admin' : 'btn-auth';
+            btn.onclick = isAdmin ? handleLogout : handleLogin;
+            
+            header.classList.toggle('admin-active', isAdmin);
+            updateEditMode();
+        });
+
+        function handleLogin() {
+            const email = prompt('📧 Email администратора:');
+            if (!email) return;
+            const pass = prompt('🔑 Пароль:');
+            if (!pass) return;
+            signInWithEmailAndPassword(auth, email, pass)
+                .catch(err => alert('❌ Ошибка входа: ' + err.message));
+        }
+
+        function handleLogout() {
+            signOut(auth);
+        }
+
+        function updateEditMode() {
+            // Применяем readonly ко всем полям в зависимости от статуса
+            document.querySelectorAll('input').forEach(inp => {
+                inp.readOnly = !isAdmin;
+            });
+            // Визуально блокируем клики по игрокам
+            document.querySelectorAll('.player').forEach(p => {
+                p.classList.toggle('locked', !isAdmin);
+            });
+        }
+
+        window.buildBracket = function() {
+            const bracket = document.getElementById('bracket');
+            const svg = document.getElementById('linesSvg');
+            bracket.innerHTML = ''; bracket.appendChild(svg); svg.innerHTML = '';
+            const rounds = CONFIG[currentSize];
+
+            const leftSide = document.createElement('div'); leftSide.className = 'side left';
+            rounds.forEach((count, rIdx) => leftSide.appendChild(createColumn(count, rIdx, 'L')));
+            bracket.appendChild(leftSide);
+
+            const center = document.createElement('div'); center.className = 'center-stage';
+            center.innerHTML = `
+                <div class="match final" id="FINAL">
+                    <div style="text-align:center;color:#fbbf24;font-weight:bold;margin-bottom:8px;">🏆 GRAND FINAL</div>
+                    <div class="player" onclick="pickWinner('FINAL', 0)">
+                        <input id="FINAL-P0" placeholder="Левый финалист" readonly>
+                        <span class="score" id="FINAL-S0">-</span>
+                    </div>
+                    <div class="player" onclick="pickWinner('FINAL', 1)">
+                        <input id="FINAL-P1" placeholder="Правый финалист" readonly>
+                        <span class="score" id="FINAL-S1">-</span>
+                    </div>
+                </div>
+                <div class="champion-box" id="champBox">
+                    <div class="crown">👑</div><div class="champ-label">Чемпион</div>
+                    <div class="champ-name" id="champName">???</div>
+                </div>`;
+            bracket.appendChild(center);
+
+            const rightSide = document.createElement('div'); rightSide.className = 'side right';
+            rounds.forEach((count, rIdx) => rightSide.appendChild(createColumn(count, rIdx, 'R')));
+            bracket.appendChild(rightSide);
+
+            updateEditMode(); // Применяем права доступа сразу после создания
+            requestAnimationFrame(() => setTimeout(drawLines, 50));
+        };
+
+        function createColumn(matchCount, roundIdx, side) {
+            const col = document.createElement('div'); col.className = 'round-col';
+            for (let i = 0; i < matchCount; i++) {
+                const id = `${side}-R${roundIdx}-M${i}`;
+                const match = document.createElement('div'); match.className = 'match'; match.id = id;
+                match.innerHTML = `
+                    <div class="player" onclick="pickWinner('${id}', 0)">
+                        <input id="${id}-P0" placeholder="Игрок 1" readonly><span class="score" id="${id}-S0">-</span>
+                    </div>
+                    <div class="player" onclick="pickWinner('${id}', 1)">
+                        <input id="${id}-P1" placeholder="Игрок 2" readonly><span class="score" id="${id}-S1">-</span>
+                    </div>`;
+                col.appendChild(match);
+            }
+            return col;
+        }
+
+        window.pickWinner = function(matchId, playerIdx) {
+            if (!isAdmin) return alert('🔒 Только админ может менять результаты!');
+            
+            const p0 = document.getElementById(`${matchId}-P0`);
+            const p1 = document.getElementById(`${matchId}-P1`);
+            if (!p0.value.trim() || !p1.value.trim()) return alert('Введите оба имени!');
+
+            const match = document.getElementById(matchId);
+            const players = match.querySelectorAll('.player');
+            players.forEach(p => p.classList.remove('winner', 'loser'));
+            match.classList.remove('winner');
+            
+            players[playerIdx].classList.add('winner');
+            players[1-playerIdx].classList.add('loser');
+            match.classList.add('winner');
+            
+            document.getElementById(`${matchId}-S${playerIdx}`).textContent = 'WIN';
+            document.getElementById(`${matchId}-S${1-playerIdx}`).textContent = 'LOSS';
+
+            advance(matchId, playerIdx);
+        };
+
+        function advance(matchId, winnerIdx) {
+            const name = document.getElementById(`${matchId}-P${winnerIdx}`).value;
+            if (matchId === 'FINAL') {
+                document.getElementById('champName').textContent = name;
+                document.getElementById('champBox').classList.add('visible');
+                return;
+            }
+            const [side, roundStr, matchStr] = matchId.split('-');
+            const round = parseInt(roundStr.replace('R', ''));
+            const match = parseInt(matchStr.replace('M', ''));
+            const rounds = CONFIG[currentSize];
+            const nextRound = round + 1;
+            const nextMatch = Math.floor(match / 2);
+            const slot = match % 2;
+
+            if (nextRound < rounds.length) {
+                const nextId = `${side}-R${nextRound}-M${nextMatch}`;
+                const input = document.getElementById(`${nextId}-P${slot}`);
+                if (input) { input.value = name; input.readOnly = true; }
+            } else {
+                const finalSlot = side === 'L' ? 0 : 1;
+                const input = document.getElementById(`FINAL-P${finalSlot}`);
+                if (input) { input.value = name; input.readOnly = true; }
+            }
+            setTimeout(drawLines, 50);
+            saveToCloud();
+        }
+
+        window.changeSize = function() {
+            if (!isAdmin) return alert('🔒 Только админ может менять размер сетки!');
+            const select = document.getElementById('sizeSelect');
+            const newSize = parseInt(select.value);
+            if (newSize === currentSize) return;
+            if (!confirm(`Сменить на ${newSize} игроков?\nПрогресс будет сброшен.`)) {
+                select.value = currentSize; return;
+            }
+            currentSize = newSize;
+            buildBracket();
+            saveToCloud();
+        };
+
+        function drawLines() {
+            const svg = document.getElementById('linesSvg');
+            const bracket = document.getElementById('bracket');
+            const bRect = bracket.getBoundingClientRect();
+            svg.innerHTML = '';
+            svg.setAttribute('viewBox', `0 0 ${bracket.scrollWidth} ${bracket.scrollHeight}`);
+            svg.style.width = bracket.scrollWidth + 'px';
+            svg.style.height = bracket.scrollHeight + 'px';
+            
+            const rounds = CONFIG[currentSize];
+            const draw = (fromId, toId) => {
+                const from = document.getElementById(fromId);
+                const to = document.getElementById(toId);
+                if (!from || !to) return;
+                const f = from.getBoundingClientRect();
+                const t = to.getBoundingClientRect();
+                const x1 = f.right - bRect.left;
+                const y1 = f.top + f.height/2 - bRect.top;
+                const x2 = t.left - bRect.left;
+                const y2 = t.top + t.height/2 - bRect.top;
+                const mx = (x1 + x2) / 2;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+                path.setAttribute('class', 'line');
+                svg.appendChild(path);
+            };
+            for (let r = 0; r < rounds.length - 1; r++) {
+                for (let m = 0; m < rounds[r]; m++) draw(`L-R${r}-M${m}`, `L-R${r+1}-M${Math.floor(m/2)}`);
+            }
+            if (rounds.length) draw(`L-R${rounds.length-1}-M0`, 'FINAL');
+            for (let r = 0; r < rounds.length - 1; r++) {
+                for (let m = 0; m < rounds[r]; m++) draw(`R-R${r}-M${m}`, `R-R${r+1}-M${Math.floor(m/2)}`);
+            }
+            if (rounds.length) draw(`R-R${rounds.length-1}-M0`, 'FINAL');
+        }
+
+        function saveToCloud() {
+            if (isSyncing || !isAdmin) return;
+            const data = { size: currentSize, inputs: {} };
+            document.querySelectorAll('input').forEach(i => data.inputs[i.id] = {v: i.value, r: i.readOnly});
+            set(dbRef, data).catch(err => console.error("Ошибка сохранения:", err));
+        }
+
+        // 🌐 Синхронизация в реальном времени (для всех)
+        onValue(dbRef, (snapshot) => {
+            isSyncing = true;
+            const data = snapshot.val();
+            if (!data) { isSyncing = false; return; }
+            
+            if (data.size && data.size !== currentSize) {
+                currentSize = data.size;
+                document.getElementById('sizeSelect').value = currentSize;
+                buildBracket();
+            }
+
+            if (data.inputs) {
+                Object.keys(data.inputs).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) { 
+                        el.value = data.inputs[id].v; 
+                        // Сохраняем права доступа: если не админ - блокируем
+                        el.readOnly = !isAdmin || data.inputs[id].r; 
+                    }
+                });
+            }
+            setTimeout(() => { drawLines(); isSyncing = false; }, 100);
+        });
+
+        window.onload = () => {
+            buildBracket();
+            window.addEventListener('resize', drawLines);
+        };
+    </script>
+</body>
+</html>
