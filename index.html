@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Турнирная Сетка (Admin Only)</title>
+    <title>TourNet - Brawl Stars Cup</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -15,6 +15,8 @@
             flex-direction: column;
             overflow: hidden;
         }
+        
+        /* Шапка */
         .header {
             background: #1e293b;
             padding: 15px 20px;
@@ -40,6 +42,7 @@
         .btn-auth:hover { background: #475569; }
         .btn-auth.admin { background: #10b981; border-color: #10b981; color: #fff; }
         
+        /* Скролл */
         .scroll-area { flex: 1; overflow: auto; position: relative; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         .bracket { position: relative; display: flex; align-items: center; justify-content: center; min-width: max-content; padding: 40px; gap: 60px; }
         .lines-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
@@ -49,6 +52,7 @@
         .side.right { flex-direction: row-reverse; }
         .round-col { display: flex; flex-direction: column; justify-content: space-around; width: 220px; min-height: 100%; }
         
+        /* Матчи */
         .match {
             background: #1e293b; border: 2px solid #334155; border-radius: 10px; padding: 12px;
             position: relative; z-index: 2; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -57,6 +61,7 @@
         .match.winner { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
         .match.final { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
         
+        /* Игроки */
         .player {
             display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 4px 0;
             background: #0f172a; border-radius: 6px; cursor: pointer; transition: 0.2s;
@@ -73,6 +78,7 @@
         .score { font-size: 11px; font-weight: bold; padding: 2px 6px; background: #334155; border-radius: 4px; min-width: 36px; text-align: center; }
         .player.winner .score { background: #065f46; color: #6ee7b7; }
         
+        /* Центр */
         .center-stage { display: flex; flex-direction: column; align-items: center; gap: 30px; min-width: 240px; z-index: 2; }
         .champion-box {
             background: linear-gradient(135deg, #fbbf24, #d97706); padding: 20px; border-radius: 12px;
@@ -83,7 +89,81 @@
         .crown { font-size: 36px; margin-bottom: 8px; }
         .champ-label { color: #78350f; font-weight: bold; text-transform: uppercase; font-size: 11px; }
         .champ-name { color: #fff; font-size: 22px; font-weight: 900; }
-        
+
+        /* --- Стили Модального Окна Входа --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 16px;
+            width: 320px;
+            border: 2px solid #334155;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-box h2 {
+            color: #fbbf24;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+            /* Разрешаем ввод и указатель мыши */
+            pointer-events: auto; 
+        }
+
+        .modal-input:focus { border-color: #fbbf24; }
+
+        .modal-btn-group { display: flex; gap: 10px; margin-top: 10px; }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-login { background: #fbbf24; color: #0f172a; }
+        .btn-login:hover { background: #d97706; }
+
+        .btn-cancel { background: #334155; color: #e2e8f0; }
+        .btn-cancel:hover { background: #475569; }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        /* Адаптив */
         @media (max-width: 768px) {
             .bracket { gap: 30px; padding: 20px; }
             .round-col { width: 180px; }
@@ -97,7 +177,7 @@
 </head>
 <body>
     <div class="header" id="header">
-        <h1>🏆 Турнирная Сетка</h1>
+        <h1>🏆 TourNet</h1>
         <div class="controls">
             <select id="sizeSelect" onchange="changeSize()">
                 <option value="8">8 Игроков</option>
@@ -105,6 +185,21 @@
                 <option value="32">32 Игрока</option>
             </select>
             <button id="authBtn" class="btn-auth">🔐 Войти</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-box">
+            <h2>🔐 Вход</h2>
+            <div class="error-msg" id="loginError"></div>
+            <!-- autocomplete="off" чтобы браузер не перекрывал поля -->
+            <input type="email" id="loginEmail" class="modal-input" placeholder="Email администратора" autocomplete="off">
+            <input type="password" id="loginPass" class="modal-input" placeholder="Пароль" autocomplete="off">
+            <div class="modal-btn-group">
+                <button class="btn-modal btn-login" id="btnSubmitLogin">Войти</button>
+                <button class="btn-modal btn-cancel" id="btnCancelLogin">Отмена</button>
+            </div>
         </div>
     </div>
 
@@ -119,16 +214,16 @@
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // ⚠️ ВСТАВЬ СЮДА СВОЙ FIREBASE CONFIG
+        // 🔑 ВСТАВЬ СЮДА СВОЙ FIREBASE CONFIG
         const firebaseConfig = {
-			apiKey: "AIzaSyCHO2OaGHft4D6HQ-hzqboSRTWtBMwrfGE",
-			authDomain: "tournet-e1f64.firebaseapp.com",
-			databaseURL: "https://tournet-e1f64-default-rtdb.firebaseio.com",
-			projectId: "tournet-e1f64",
-			storageBucket: "tournet-e1f64.firebasestorage.app",
-			messagingSenderId: "568299525691",
-			appId: "1:568299525691:web:fc74bc870f2f9477b5ae1e"
-		};
+  apiKey: "AIzaSyCHO2OaGHft4D6HQ-hzqboSRTWtBMwrfGE",
+  authDomain: "tournet-e1f64.firebaseapp.com",
+  databaseURL: "https://tournet-e1f64-default-rtdb.firebaseio.com",
+  projectId: "tournet-e1f64",
+  storageBucket: "tournet-e1f64.firebasestorage.app",
+  messagingSenderId: "568299525691",
+  appId: "1:568299525691:web:fc74bc870f2f9477b5ae1e"
+};
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -140,39 +235,96 @@
         let isAdmin = false;
         let isSyncing = false;
 
-        // 🔐 Управление авторизацией
+        // Элементы модального окна
+        const modal = document.getElementById('loginModal');
+        const emailInput = document.getElementById('loginEmail');
+        const passInput = document.getElementById('loginPass');
+        const errorDiv = document.getElementById('loginError');
+        const btnSubmit = document.getElementById('btnSubmitLogin');
+        const btnCancel = document.getElementById('btnCancelLogin');
+        const authBtn = document.getElementById('authBtn');
+
+        // Управление модальным окном
+        authBtn.addEventListener('click', () => {
+            if (isAdmin) {
+                handleLogout();
+            } else {
+                // При открытии очищаем поля и разблокируем их
+                emailInput.value = '';
+                passInput.value = '';
+                errorDiv.textContent = '';
+                
+                // --- ИСПРАВЛЕНИЕ: Принудительно разрешаем ввод ---
+                emailInput.readOnly = false;
+                passInput.readOnly = false;
+                
+                modal.classList.add('open');
+                emailInput.focus();
+            }
+        });
+
+        btnCancel.addEventListener('click', () => {
+            modal.classList.remove('open');
+        });
+
+        // Вход при нажатии Enter
+        passInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') btnSubmit.click();
+        });
+
+        // Логика входа
+        btnSubmit.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            const pass = passInput.value.trim();
+            
+            if (!email || !pass) {
+                errorDiv.textContent = 'Заполни все поля!';
+                return;
+            }
+
+            btnSubmit.textContent = 'Вход...';
+            btnSubmit.disabled = true;
+            errorDiv.textContent = '';
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => {
+                    modal.classList.remove('open');
+                })
+                .catch((error) => {
+                    errorDiv.textContent = '❌ Неверный email или пароль';
+                    btnSubmit.textContent = 'Войти';
+                    btnSubmit.disabled = false;
+                });
+        });
+
+        // Слушатель состояния авторизации
         onAuthStateChanged(auth, (user) => {
             isAdmin = !!user;
-            const btn = document.getElementById('authBtn');
             const header = document.getElementById('header');
             
-            btn.textContent = isAdmin ? '🔓 Выйти' : '🔐 Войти';
-            btn.className = isAdmin ? 'btn-auth admin' : 'btn-auth';
-            btn.onclick = isAdmin ? handleLogout : handleLogin;
+            if (isAdmin) {
+                authBtn.textContent = '🔓 Выйти';
+                authBtn.classList.add('admin');
+            } else {
+                authBtn.textContent = '🔐 Войти';
+                authBtn.classList.remove('admin');
+            }
             
             header.classList.toggle('admin-active', isAdmin);
             updateEditMode();
         });
-
-        function handleLogin() {
-            const email = prompt('📧 Email администратора:');
-            if (!email) return;
-            const pass = prompt('🔑 Пароль:');
-            if (!pass) return;
-            signInWithEmailAndPassword(auth, email, pass)
-                .catch(err => alert('❌ Ошибка входа: ' + err.message));
-        }
 
         function handleLogout() {
             signOut(auth);
         }
 
         function updateEditMode() {
-            // Применяем readonly ко всем полям в зависимости от статуса
             document.querySelectorAll('input').forEach(inp => {
+                // --- ИСПРАВЛЕНИЕ: Не блокировать поля формы входа ---
+                if (inp.id === 'loginEmail' || inp.id === 'loginPass') return;
+                
                 inp.readOnly = !isAdmin;
             });
-            // Визуально блокируем клики по игрокам
             document.querySelectorAll('.player').forEach(p => {
                 p.classList.toggle('locked', !isAdmin);
             });
@@ -211,7 +363,7 @@
             rounds.forEach((count, rIdx) => rightSide.appendChild(createColumn(count, rIdx, 'R')));
             bracket.appendChild(rightSide);
 
-            updateEditMode(); // Применяем права доступа сразу после создания
+            updateEditMode();
             requestAnimationFrame(() => setTimeout(drawLines, 50));
         };
 
@@ -331,14 +483,45 @@
             if (rounds.length) draw(`R-R${rounds.length-1}-M0`, 'FINAL');
         }
 
+        // 💾 Сохранение состояний
         function saveToCloud() {
             if (isSyncing || !isAdmin) return;
-            const data = { size: currentSize, inputs: {} };
-            document.querySelectorAll('input').forEach(i => data.inputs[i.id] = {v: i.value, r: i.readOnly});
+            const data = { 
+                size: currentSize, 
+                inputs: {},
+                states: {}
+            };
+            
+            document.querySelectorAll('input').forEach(i => {
+                // Не сохраняем поля логина
+                if(i.id === 'loginEmail' || i.id === 'loginPass') return;
+                data.inputs[i.id] = {v: i.value, r: i.readOnly};
+            });
+            
+            document.querySelectorAll('.match').forEach(match => {
+                const matchId = match.id;
+                data.states[matchId] = {
+                    winner: match.classList.contains('winner'),
+                    players: []
+                };
+                match.querySelectorAll('.player').forEach((player, idx) => {
+                    data.states[matchId].players[idx] = {
+                        winner: player.classList.contains('winner'),
+                        loser: player.classList.contains('loser')
+                    };
+                });
+            });
+            
+            const champBox = document.getElementById('champBox');
+            data.champion = {
+                name: document.getElementById('champName').textContent,
+                visible: champBox.classList.contains('visible')
+            };
+            
             set(dbRef, data).catch(err => console.error("Ошибка сохранения:", err));
         }
 
-        // 🌐 Синхронизация в реальном времени (для всех)
+        // 🌐 Синхронизация
         onValue(dbRef, (snapshot) => {
             isSyncing = true;
             const data = snapshot.val();
@@ -355,11 +538,37 @@
                     const el = document.getElementById(id);
                     if (el) { 
                         el.value = data.inputs[id].v; 
-                        // Сохраняем права доступа: если не админ - блокируем
                         el.readOnly = !isAdmin || data.inputs[id].r; 
                     }
                 });
             }
+            
+            if (data.states) {
+                Object.keys(data.states).forEach(matchId => {
+                    const match = document.getElementById(matchId);
+                    if (!match) return;
+                    const state = data.states[matchId];
+                    if (state.winner) match.classList.add('winner');
+                    else match.classList.remove('winner');
+                    
+                    const players = match.querySelectorAll('.player');
+                    state.players.forEach((playerState, idx) => {
+                        if (players[idx]) {
+                            if (playerState.winner) players[idx].classList.add('winner');
+                            else players[idx].classList.remove('winner');
+                            if (playerState.loser) players[idx].classList.add('loser');
+                            else players[idx].classList.remove('loser');
+                        }
+                    });
+                });
+            }
+            
+            if (data.champion) {
+                document.getElementById('champName').textContent = data.champion.name || '???';
+                if (data.champion.visible) document.getElementById('champBox').classList.add('visible');
+                else document.getElementById('champBox').classList.remove('visible');
+            }
+            
             setTimeout(() => { drawLines(); isSyncing = false; }, 100);
         });
 
@@ -370,3 +579,4 @@
     </script>
 </body>
 </html>
+
