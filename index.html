@@ -15,19 +15,9 @@
             flex-direction: column;
             overflow: hidden;
         }
-        
-        /* Шапка */
         .header {
-            background: #1e293b;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #334155;
-            z-index: 10;
-            transition: border-color 0.3s;
-            flex-wrap: wrap;
-            gap: 10px;
+            background: #1e293b; padding: 15px 20px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 2px solid #334155; z-index: 10; flex-wrap: wrap; gap: 10px;
         }
         .header.admin-active { border-color: #10b981; }
         .header h1 { font-size: 1.3rem; color: #fbbf24; text-transform: uppercase; letter-spacing: 1px; }
@@ -38,49 +28,27 @@
         }
         .btn-auth {
             background: #334155; color: #e2e8f0; border: 2px solid #475569;
-            padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;
-            transition: all 0.2s;
+            padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;
         }
         .btn-auth:hover { background: #475569; }
         .btn-auth.admin { background: #10b981; border-color: #10b981; color: #fff; }
-
-        /* Кнопка доната */
         .btn-donate {
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; border: none;
+            padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer;
+            text-decoration: none; transition: all 0.3s; display: flex; align-items: center; gap: 6px;
             box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
         }
-        .btn-donate:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5);
-            filter: brightness(1.1);
-        }
-        .btn-donate:active {
-            transform: translateY(0);
-        }
+        .btn-donate:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5); filter: brightness(1.1); }
         
-        /* Скролл */
         .scroll-area { flex: 1; overflow: auto; position: relative; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         .bracket { position: relative; display: flex; align-items: center; justify-content: center; min-width: max-content; padding: 40px; gap: 60px; }
         .lines-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-        .line { stroke: #475569; stroke-width: 2; fill: none; transition: stroke 0.3s; }
+        .line { stroke: #475569; stroke-width: 2; fill: none; }
         .line.active { stroke: #10b981; stroke-width: 3; }
         .side { display: flex; gap: 60px; }
         .side.right { flex-direction: row-reverse; }
         .round-col { display: flex; flex-direction: column; justify-content: space-around; width: 220px; min-height: 100%; }
         
-        /* Матчи */
         .match {
             background: #1e293b; border: 2px solid #334155; border-radius: 10px; padding: 12px;
             position: relative; z-index: 2; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -89,7 +57,6 @@
         .match.winner { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
         .match.final { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); }
         
-        /* Игроки */
         .player {
             display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 4px 0;
             background: #0f172a; border-radius: 6px; transition: 0.2s;
@@ -97,35 +64,20 @@
         .player.winner { background: #10b981; color: white; font-weight: bold; }
         .player.loser { opacity: 0.5; }
         .player.locked { cursor: not-allowed; opacity: 0.8; }
-        
         .player input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 14px; }
         .player input::placeholder { color: #64748b; }
         .player input:read-only { color: #6ee7b7; font-weight: 600; cursor: not-allowed; }
-        
         .score { font-size: 11px; font-weight: bold; padding: 2px 6px; background: #334155; border-radius: 4px; min-width: 36px; text-align: center; }
         .player.winner .score { background: #065f46; color: #6ee7b7; }
 
-        /* Кнопка выбора победителя (галочка) */
         .pick-btn {
-            background: #334155;
-            border: none;
-            color: #94a3b8;
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            flex-shrink: 0;
+            background: #334155; border: none; color: #94a3b8; width: 24px; height: 24px; border-radius: 4px;
+            cursor: pointer; margin-left: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
         }
         .pick-btn:hover { background: #10b981; color: white; }
         .player.winner .pick-btn { background: #065f46; color: #6ee7b7; }
         .player.locked .pick-btn { display: none; }
         
-        /* Центр */
         .center-stage { display: flex; flex-direction: column; align-items: center; gap: 30px; min-width: 240px; z-index: 2; }
         .champion-box {
             background: linear-gradient(135deg, #fbbf24, #d97706); padding: 20px; border-radius: 12px;
@@ -137,79 +89,30 @@
         .champ-label { color: #78350f; font-weight: bold; text-transform: uppercase; font-size: 11px; }
         .champ-name { color: #fff; font-size: 22px; font-weight: 900; }
 
-        /* --- Стили Модального Окна Входа --- */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            display: none; 
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); display: none; justify-content: center; align-items: center;
+            z-index: 1000; backdrop-filter: blur(5px);
         }
-
         .modal-overlay.open { display: flex; }
-
         .modal-box {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 16px;
-            width: 320px;
-            border: 2px solid #334155;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            text-align: center;
-            position: relative;
+            background: #1e293b; padding: 30px; border-radius: 16px; width: 320px;
+            border: 2px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; position: relative;
         }
-
-        .modal-box h2 {
-            color: #fbbf24;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
+        .modal-box h2 { color: #fbbf24; margin-bottom: 20px; font-size: 1.5rem; }
         .modal-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border: 2px solid #334155;
-            background: #0f172a;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s;
-            pointer-events: auto; 
+            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 2px solid #334155;
+            background: #0f172a; color: white; font-size: 14px; outline: none; transition: border-color 0.3s; pointer-events: auto;
         }
-
         .modal-input:focus { border-color: #fbbf24; }
-
         .modal-btn-group { display: flex; gap: 10px; margin-top: 10px; }
-
-        .btn-modal {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
+        .btn-modal { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-login { background: #fbbf24; color: #0f172a; }
         .btn-login:hover { background: #d97706; }
-
         .btn-cancel { background: #334155; color: #e2e8f0; }
         .btn-cancel:hover { background: #475569; }
+        .error-msg { color: #ef4444; font-size: 13px; margin-bottom: 15px; min-height: 20px; }
 
-        .error-msg {
-            color: #ef4444;
-            font-size: 13px;
-            margin-bottom: 15px;
-            min-height: 20px;
-        }
-
-        /* Адаптив */
         @media (max-width: 768px) {
             .bracket { gap: 30px; padding: 20px; }
             .round-col { width: 180px; }
@@ -236,7 +139,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно входа -->
     <div class="modal-overlay" id="loginModal">
         <div class="modal-box">
             <h2>🔐 Вход</h2>
@@ -261,8 +163,7 @@
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-        // 🔑 ВСТАВЬ СЮДА СВОЙ FIREBASE CONFIG
-      const firebaseConfig = {
+       const firebaseConfig = {
   apiKey: "AIzaSyCHO2OaGHft4D6HQ-hzqboSRTWtBMwrfGE",
   authDomain: "tournet-e1f64.firebaseapp.com",
   databaseURL: "https://tournet-e1f64-default-rtdb.firebaseio.com",
@@ -282,7 +183,6 @@
         let isAdmin = false;
         let isSyncing = false;
 
-        // Элементы модального окна
         const modal = document.getElementById('loginModal');
         const emailInput = document.getElementById('loginEmail');
         const passInput = document.getElementById('loginPass');
@@ -291,81 +191,48 @@
         const btnCancel = document.getElementById('btnCancelLogin');
         const authBtn = document.getElementById('authBtn');
 
-        // Управление модальным окном
         authBtn.addEventListener('click', () => {
-            if (isAdmin) {
-                handleLogout();
-            } else {
-                emailInput.value = '';
-                passInput.value = '';
-                errorDiv.textContent = '';
-                emailInput.readOnly = false;
-                passInput.readOnly = false;
-                modal.classList.add('open');
-                emailInput.focus();
+            if (isAdmin) { handleLogout(); } 
+            else {
+                emailInput.value = ''; passInput.value = ''; errorDiv.textContent = '';
+                emailInput.readOnly = false; passInput.readOnly = false;
+                modal.classList.add('open'); emailInput.focus();
             }
         });
 
-        btnCancel.addEventListener('click', () => {
-            modal.classList.remove('open');
-        });
-
-        passInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') btnSubmit.click();
-        });
+        btnCancel.addEventListener('click', () => modal.classList.remove('open'));
+        passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') btnSubmit.click(); });
 
         btnSubmit.addEventListener('click', () => {
             const email = emailInput.value.trim();
             const pass = passInput.value.trim();
-            
-            if (!email || !pass) {
-                errorDiv.textContent = 'Заполни все поля!';
-                return;
-            }
-
-            btnSubmit.textContent = 'Вход...';
-            btnSubmit.disabled = true;
-            errorDiv.textContent = '';
-
+            if (!email || !pass) { errorDiv.textContent = 'Заполни все поля!'; return; }
+            btnSubmit.textContent = 'Вход...'; btnSubmit.disabled = true; errorDiv.textContent = '';
             signInWithEmailAndPassword(auth, email, pass)
-                .then(() => {
-                    modal.classList.remove('open');
-                })
+                .then(() => modal.classList.remove('open'))
                 .catch((error) => {
                     errorDiv.textContent = '❌ Неверный email или пароль';
-                    btnSubmit.textContent = 'Войти';
-                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Войти'; btnSubmit.disabled = false;
                 });
         });
 
         onAuthStateChanged(auth, (user) => {
             isAdmin = !!user;
             const header = document.getElementById('header');
-            
-            if (isAdmin) {
-                authBtn.textContent = '🔓 Выйти';
-                authBtn.classList.add('admin');
-            } else {
-                authBtn.textContent = '🔐 Войти';
-                authBtn.classList.remove('admin');
-            }
-            
+            authBtn.textContent = isAdmin ? '🔓 Выйти' : '🔐 Войти';
+            authBtn.classList.toggle('admin', isAdmin);
             header.classList.toggle('admin-active', isAdmin);
             updateEditMode();
         });
 
-        function handleLogout() {
-            signOut(auth);
-        }
+        function handleLogout() { signOut(auth); }
 
         function updateEditMode() {
             document.querySelectorAll('input').forEach(inp => {
                 if (inp.id === 'loginEmail' || inp.id === 'loginPass') return;
                 inp.readOnly = !isAdmin;
             });
-            document.querySelectorAll('.player').forEach(p => {
-                p.classList.toggle('locked', !isAdmin);
-            });
+            document.querySelectorAll('.player').forEach(p => p.classList.toggle('locked', !isAdmin));
         }
 
         window.buildBracket = function() {
@@ -430,39 +297,28 @@
 
         window.pickWinner = function(matchId, playerIdx) {
             if (!isAdmin) return alert('🔒 Только админ может менять результаты!');
-            
             const p0 = document.getElementById(`${matchId}-P0`);
             const p1 = document.getElementById(`${matchId}-P1`);
-            
-            if (!p0.value.trim() || !p1.value.trim()) {
-                return alert('Введите оба имени перед выбором победителя!');
-            }
-
+            if (!p0.value.trim() || !p1.value.trim()) return alert('Введите оба имени!');
             const match = document.getElementById(matchId);
             const players = match.querySelectorAll('.player');
             players.forEach(p => p.classList.remove('winner', 'loser'));
             match.classList.remove('winner');
-            
             players[playerIdx].classList.add('winner');
             players[1-playerIdx].classList.add('loser');
             match.classList.add('winner');
-            
             document.getElementById(`${matchId}-S${playerIdx}`).textContent = 'WIN';
             document.getElementById(`${matchId}-S${1-playerIdx}`).textContent = 'LOSS';
-
             advance(matchId, playerIdx);
         };
 
         function advance(matchId, winnerIdx) {
             const name = document.getElementById(`${matchId}-P${winnerIdx}`).value;
-            
             if (matchId === 'FINAL') {
                 document.getElementById('champName').textContent = name;
                 document.getElementById('champBox').classList.add('visible');
-                saveToCloud();
-                return;
+                saveToCloud(); return;
             }
-
             const [side, roundStr, matchStr] = matchId.split('-');
             const round = parseInt(roundStr.replace('R', ''));
             const match = parseInt(matchStr.replace('M', ''));
@@ -470,7 +326,6 @@
             const nextRound = round + 1;
             const nextMatch = Math.floor(match / 2);
             const slot = match % 2;
-
             if (nextRound < rounds.length) {
                 const nextId = `${side}-R${nextRound}-M${nextMatch}`;
                 const input = document.getElementById(`${nextId}-P${slot}`);
@@ -489,9 +344,7 @@
             const select = document.getElementById('sizeSelect');
             const newSize = parseInt(select.value);
             if (newSize === currentSize) return;
-            if (!confirm(`Сменить на ${newSize} игроков?\nПрогресс будет сброшен.`)) {
-                select.value = currentSize; return;
-            }
+            if (!confirm(`Сменить на ${newSize} игроков?`)) { select.value = currentSize; return; }
             currentSize = newSize;
             buildBracket();
             saveToCloud();
@@ -505,7 +358,6 @@
             svg.setAttribute('viewBox', `0 0 ${bracket.scrollWidth} ${bracket.scrollHeight}`);
             svg.style.width = bracket.scrollWidth + 'px';
             svg.style.height = bracket.scrollHeight + 'px';
-            
             const rounds = CONFIG[currentSize];
             const draw = (fromId, toId) => {
                 const from = document.getElementById(fromId);
@@ -535,24 +387,14 @@
 
         function saveToCloud() {
             if (isSyncing || !isAdmin) return;
-            const data = { 
-                size: currentSize, 
-                inputs: {},
-                states: {},
-                champion: {}
-            };
-            
+            const data = { size: currentSize, inputs: {}, states: {}, champion: {} };
             document.querySelectorAll('input').forEach(i => {
                 if(i.id === 'loginEmail' || i.id === 'loginPass') return;
                 data.inputs[i.id] = {v: i.value, r: i.readOnly};
             });
-            
             document.querySelectorAll('.match').forEach(match => {
                 const matchId = match.id;
-                data.states[matchId] = {
-                    winner: match.classList.contains('winner'),
-                    players: []
-                };
+                data.states[matchId] = { winner: match.classList.contains('winner'), players: [] };
                 match.querySelectorAll('.player').forEach((player, idx) => {
                     data.states[matchId].players[idx] = {
                         winner: player.classList.contains('winner'),
@@ -560,74 +402,57 @@
                     };
                 });
             });
-            
             const champBox = document.getElementById('champBox');
-            data.champion = {
-                name: document.getElementById('champName').textContent,
-                visible: champBox.classList.contains('visible')
-            };
-            
-            set(dbRef, data).catch(err => console.error("Ошибка сохранения:", err));
+            data.champion = { name: document.getElementById('champName').textContent, visible: champBox.classList.contains('visible') };
+            set(dbRef, data).catch(err => console.error("Ошибка:", err));
         }
 
         onValue(dbRef, (snapshot) => {
             isSyncing = true;
             const data = snapshot.val();
             if (!data) { isSyncing = false; return; }
-            
             if (data.size && data.size !== currentSize) {
                 currentSize = data.size;
                 document.getElementById('sizeSelect').value = currentSize;
                 buildBracket();
             }
-
             if (data.inputs) {
                 Object.keys(data.inputs).forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) { 
-                        el.value = data.inputs[id].v; 
-                        el.readOnly = !isAdmin || data.inputs[id].r; 
-                    }
+                    if (el) { el.value = data.inputs[id].v; el.readOnly = !isAdmin || data.inputs[id].r; }
                 });
             }
-            
             if (data.states) {
                 Object.keys(data.states).forEach(matchId => {
                     const match = document.getElementById(matchId);
                     if (!match) return;
                     const state = data.states[matchId];
-                    if (state.winner) match.classList.add('winner');
-                    else match.classList.remove('winner');
-                    
+                    if (state.winner) match.classList.add('winner'); else match.classList.remove('winner');
                     const players = match.querySelectorAll('.player');
-                    state.players.forEach((playerState, idx) => {
+                    state.players.forEach((ps, idx) => {
                         if (players[idx]) {
-                            if (playerState.winner) players[idx].classList.add('winner');
-                            else players[idx].classList.remove('winner');
-                            if (playerState.loser) players[idx].classList.add('loser');
-                            else players[idx].classList.remove('loser');
+                            if (ps.winner) players[idx].classList.add('winner'); else players[idx].classList.remove('winner');
+                            if (ps.loser) players[idx].classList.add('loser'); else players[idx].classList.remove('loser');
                         }
                     });
                 });
             }
-            
             if (data.champion) {
                 document.getElementById('champName').textContent = data.champion.name || '???';
-                if (data.champion.visible) {
-                    document.getElementById('champBox').classList.add('visible');
-                } else {
-                    document.getElementById('champBox').classList.remove('visible');
-                }
+                document.getElementById('champBox').classList.toggle('visible', data.champion.visible);
             }
-            
             setTimeout(() => { drawLines(); isSyncing = false; }, 100);
         });
 
-        window.onload = () => {
-            buildBracket();
-            window.addEventListener('resize', drawLines);
-        };
+        // ✅ АВТОСОХРАНЕНИЕ - ИСПРАВЛЕНО
+        let saveTimer;
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'loginEmail' || e.target.id === 'loginPass') return;
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => { if (isAdmin) saveToCloud(); }, 1000);
+        });
+
+        window.onload = () => { buildBracket(); window.addEventListener('resize', drawLines); };
     </script>
 </body>
 </html>
-
