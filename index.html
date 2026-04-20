@@ -232,7 +232,7 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         // 🔑 ВСТАВЬ СЮДА СВОЙ FIREBASE CONFIG
-      const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyCHO2OaGHft4D6HQ-hzqboSRTWtBMwrfGE",
   authDomain: "tournet-e1f64.firebaseapp.com",
   databaseURL: "https://tournet-e1f64-default-rtdb.firebaseio.com",
@@ -399,7 +399,6 @@
         }
 
         window.pickWinner = function(matchId, playerIdx) {
-            // ИСПРАВЛЕНИЕ: Проверка админа и имен
             if (!isAdmin) return alert('🔒 Только админ может менять результаты!');
             
             const p0 = document.getElementById(`${matchId}-P0`);
@@ -426,11 +425,15 @@
 
         function advance(matchId, winnerIdx) {
             const name = document.getElementById(`${matchId}-P${winnerIdx}`).value;
+            
+            // ✅ ИСПРАВЛЕНО: Сохраняем чемпиона и вызываем сохранение
             if (matchId === 'FINAL') {
                 document.getElementById('champName').textContent = name;
                 document.getElementById('champBox').classList.add('visible');
+                saveToCloud(); // <-- ВАЖНО: сохраняем данные чемпиона в облако
                 return;
             }
+
             const [side, roundStr, matchStr] = matchId.split('-');
             const round = parseInt(roundStr.replace('R', ''));
             const match = parseInt(matchStr.replace('M', ''));
@@ -501,12 +504,14 @@
             if (rounds.length) draw(`R-R${rounds.length-1}-M0`, 'FINAL');
         }
 
+        // 💾 Сохранение состояний
         function saveToCloud() {
             if (isSyncing || !isAdmin) return;
             const data = { 
                 size: currentSize, 
                 inputs: {},
-                states: {}
+                states: {},
+                champion: {} // ✅ Инициализируем объект чемпиона
             };
             
             document.querySelectorAll('input').forEach(i => {
@@ -528,6 +533,7 @@
                 });
             });
             
+            // ✅ Сохраняем состояние чемпиона
             const champBox = document.getElementById('champBox');
             data.champion = {
                 name: document.getElementById('champName').textContent,
@@ -537,6 +543,7 @@
             set(dbRef, data).catch(err => console.error("Ошибка сохранения:", err));
         }
 
+        // 🌐 Синхронизация
         onValue(dbRef, (snapshot) => {
             isSyncing = true;
             const data = snapshot.val();
@@ -578,10 +585,14 @@
                 });
             }
             
+            // ✅ Восстанавливаем состояние чемпиона при загрузке
             if (data.champion) {
                 document.getElementById('champName').textContent = data.champion.name || '???';
-                if (data.champion.visible) document.getElementById('champBox').classList.add('visible');
-                else document.getElementById('champBox').classList.remove('visible');
+                if (data.champion.visible) {
+                    document.getElementById('champBox').classList.add('visible');
+                } else {
+                    document.getElementById('champBox').classList.remove('visible');
+                }
             }
             
             setTimeout(() => { drawLines(); isSyncing = false; }, 100);
