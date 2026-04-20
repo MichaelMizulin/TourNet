@@ -64,9 +64,8 @@
         /* Игроки */
         .player {
             display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 4px 0;
-            background: #0f172a; border-radius: 6px; cursor: pointer; transition: 0.2s;
+            background: #0f172a; border-radius: 6px; transition: 0.2s;
         }
-        .player:hover { background: #1e293b; }
         .player.winner { background: #10b981; color: white; font-weight: bold; }
         .player.loser { opacity: 0.5; }
         .player.locked { cursor: not-allowed; opacity: 0.8; }
@@ -77,6 +76,26 @@
         
         .score { font-size: 11px; font-weight: bold; padding: 2px 6px; background: #334155; border-radius: 4px; min-width: 36px; text-align: center; }
         .player.winner .score { background: #065f46; color: #6ee7b7; }
+
+        /* Кнопка выбора победителя (галочка) */
+        .pick-btn {
+            background: #334155;
+            border: none;
+            color: #94a3b8;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .pick-btn:hover { background: #10b981; color: white; }
+        .player.winner .pick-btn { background: #065f46; color: #6ee7b7; }
+        .player.locked .pick-btn { display: none; }
         
         /* Центр */
         .center-stage { display: flex; flex-direction: column; align-items: center; gap: 30px; min-width: 240px; z-index: 2; }
@@ -132,7 +151,6 @@
             font-size: 14px;
             outline: none;
             transition: border-color 0.3s;
-            /* Разрешаем ввод и указатель мыши */
             pointer-events: auto; 
         }
 
@@ -193,7 +211,6 @@
         <div class="modal-box">
             <h2>🔐 Вход</h2>
             <div class="error-msg" id="loginError"></div>
-            <!-- autocomplete="off" чтобы браузер не перекрывал поля -->
             <input type="email" id="loginEmail" class="modal-input" placeholder="Email администратора" autocomplete="off">
             <input type="password" id="loginPass" class="modal-input" placeholder="Пароль" autocomplete="off">
             <div class="modal-btn-group">
@@ -215,7 +232,7 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         // 🔑 ВСТАВЬ СЮДА СВОЙ FIREBASE CONFIG
-        const firebaseConfig = {
+      const firebaseConfig = {
   apiKey: "AIzaSyCHO2OaGHft4D6HQ-hzqboSRTWtBMwrfGE",
   authDomain: "tournet-e1f64.firebaseapp.com",
   databaseURL: "https://tournet-e1f64-default-rtdb.firebaseio.com",
@@ -249,15 +266,11 @@
             if (isAdmin) {
                 handleLogout();
             } else {
-                // При открытии очищаем поля и разблокируем их
                 emailInput.value = '';
                 passInput.value = '';
                 errorDiv.textContent = '';
-                
-                // --- ИСПРАВЛЕНИЕ: Принудительно разрешаем ввод ---
                 emailInput.readOnly = false;
                 passInput.readOnly = false;
-                
                 modal.classList.add('open');
                 emailInput.focus();
             }
@@ -267,12 +280,10 @@
             modal.classList.remove('open');
         });
 
-        // Вход при нажатии Enter
         passInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') btnSubmit.click();
         });
 
-        // Логика входа
         btnSubmit.addEventListener('click', () => {
             const email = emailInput.value.trim();
             const pass = passInput.value.trim();
@@ -297,7 +308,6 @@
                 });
         });
 
-        // Слушатель состояния авторизации
         onAuthStateChanged(auth, (user) => {
             isAdmin = !!user;
             const header = document.getElementById('header');
@@ -320,9 +330,7 @@
 
         function updateEditMode() {
             document.querySelectorAll('input').forEach(inp => {
-                // --- ИСПРАВЛЕНИЕ: Не блокировать поля формы входа ---
                 if (inp.id === 'loginEmail' || inp.id === 'loginPass') return;
-                
                 inp.readOnly = !isAdmin;
             });
             document.querySelectorAll('.player').forEach(p => {
@@ -344,13 +352,15 @@
             center.innerHTML = `
                 <div class="match final" id="FINAL">
                     <div style="text-align:center;color:#fbbf24;font-weight:bold;margin-bottom:8px;">🏆 GRAND FINAL</div>
-                    <div class="player" onclick="pickWinner('FINAL', 0)">
+                    <div class="player" id="final-player-0">
                         <input id="FINAL-P0" placeholder="Левый финалист" readonly>
                         <span class="score" id="FINAL-S0">-</span>
+                        <button class="pick-btn" onclick="pickWinner('FINAL', 0)" title="Выбрать победителя">✓</button>
                     </div>
-                    <div class="player" onclick="pickWinner('FINAL', 1)">
+                    <div class="player" id="final-player-1">
                         <input id="FINAL-P1" placeholder="Правый финалист" readonly>
                         <span class="score" id="FINAL-S1">-</span>
+                        <button class="pick-btn" onclick="pickWinner('FINAL', 1)" title="Выбрать победителя">✓</button>
                     </div>
                 </div>
                 <div class="champion-box" id="champBox">
@@ -373,11 +383,15 @@
                 const id = `${side}-R${roundIdx}-M${i}`;
                 const match = document.createElement('div'); match.className = 'match'; match.id = id;
                 match.innerHTML = `
-                    <div class="player" onclick="pickWinner('${id}', 0)">
-                        <input id="${id}-P0" placeholder="Игрок 1" readonly><span class="score" id="${id}-S0">-</span>
+                    <div class="player" id="${id}-player-0">
+                        <input id="${id}-P0" placeholder="Игрок 1" readonly>
+                        <span class="score" id="${id}-S0">-</span>
+                        <button class="pick-btn" onclick="pickWinner('${id}', 0)" title="Выбрать победителя">✓</button>
                     </div>
-                    <div class="player" onclick="pickWinner('${id}', 1)">
-                        <input id="${id}-P1" placeholder="Игрок 2" readonly><span class="score" id="${id}-S1">-</span>
+                    <div class="player" id="${id}-player-1">
+                        <input id="${id}-P1" placeholder="Игрок 2" readonly>
+                        <span class="score" id="${id}-S1">-</span>
+                        <button class="pick-btn" onclick="pickWinner('${id}', 1)" title="Выбрать победителя">✓</button>
                     </div>`;
                 col.appendChild(match);
             }
@@ -385,11 +399,15 @@
         }
 
         window.pickWinner = function(matchId, playerIdx) {
+            // ИСПРАВЛЕНИЕ: Проверка админа и имен
             if (!isAdmin) return alert('🔒 Только админ может менять результаты!');
             
             const p0 = document.getElementById(`${matchId}-P0`);
             const p1 = document.getElementById(`${matchId}-P1`);
-            if (!p0.value.trim() || !p1.value.trim()) return alert('Введите оба имени!');
+            
+            if (!p0.value.trim() || !p1.value.trim()) {
+                return alert('Введите оба имени перед выбором победителя!');
+            }
 
             const match = document.getElementById(matchId);
             const players = match.querySelectorAll('.player');
@@ -483,7 +501,6 @@
             if (rounds.length) draw(`R-R${rounds.length-1}-M0`, 'FINAL');
         }
 
-        // 💾 Сохранение состояний
         function saveToCloud() {
             if (isSyncing || !isAdmin) return;
             const data = { 
@@ -493,7 +510,6 @@
             };
             
             document.querySelectorAll('input').forEach(i => {
-                // Не сохраняем поля логина
                 if(i.id === 'loginEmail' || i.id === 'loginPass') return;
                 data.inputs[i.id] = {v: i.value, r: i.readOnly};
             });
@@ -521,7 +537,6 @@
             set(dbRef, data).catch(err => console.error("Ошибка сохранения:", err));
         }
 
-        // 🌐 Синхронизация
         onValue(dbRef, (snapshot) => {
             isSyncing = true;
             const data = snapshot.val();
