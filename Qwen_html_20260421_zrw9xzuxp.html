@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 BS Рандомайзер | Легенда</title>
+    <style>
+        :root {
+            --bg-dark: #0a0c14; --bg-card: #151825; --accent: #ffc107; --accent-hover: #e0a800;
+            --text: #e8e8e8; --text-dim: #a0a0a0; --border: #2a2d3a; 
+            --red: #ff4d4d; --green: #4caf50; --purple: #9d5cff;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg-dark); color: var(--text); min-height: 100vh; overflow-x: hidden; position: relative; }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; }
+        .bg-noise { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: url("image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.04; z-index: -1; pointer-events: none; }
+        .bg-gradient { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at 20% 80%, rgba(157,92,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(255,193,7,0.06) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(76,175,80,0.04) 0%, transparent 70%); animation: gradientShift 18s ease-in-out infinite; z-index: -1; pointer-events: none; }
+        @keyframes gradientShift { 0%,100%{transform:scale(1)rotate(0deg)} 33%{transform:scale(1.05)rotate(0.5deg)} 66%{transform:scale(0.98)rotate(-0.3deg)} }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px 15px; position: relative; z-index: 1; }
+        header { text-align: center; padding: 20px 0 15px; }
+        h1 { color: var(--accent); font-size: 1.9rem; margin-bottom: 5px; text-shadow: 0 0 15px rgba(255,193,7,0.4); }
+        .subtitle { opacity: 0.85; font-size: 0.95rem; color: var(--text-dim); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; transition: var(--transition); box-shadow: 0 4px 20px rgba(0,0,0,0.25); animation: floatIn 0.4s ease-out backwards; }
+        .panel:nth-child(1){animation-delay:0.05s} .panel:nth-child(2){animation-delay:0.1s} .panel:nth-child(3){animation-delay:0.15s} .panel:nth-child(4){animation-delay:0.2s}
+        @keyframes floatIn { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+        .panel:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.35); border-color: var(--accent); }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+        .panel-title { color: var(--accent); font-weight: 600; font-size: 1.05rem; }
+        .bulk-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+        .bulk-btn { background: #232635; color: var(--text); border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: var(--transition); font-weight: 500; }
+        .bulk-btn:hover { background: var(--accent); color: #111; border-color: var(--accent); transform: translateY(-1px); }
+        .search-box { margin-bottom: 10px; }
+        .search-box input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: #0d0f18; color: var(--text); font-size: 0.9rem; transition: var(--transition); }
+        .search-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,193,7,0.15); }
+        .filters { flex: 1; max-height: 230px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 4px; }
+        .filters::-webkit-scrollbar { width: 5px; }
+        .filters::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        label { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 5px 8px; border-radius: 6px; font-size: 0.9rem; transition: var(--transition); }
+        label:hover { background: rgba(255,193,7,0.08); color: #fff; }
+        label.disabled { opacity: 0.35; cursor: not-allowed; }
+        label.checked { background: rgba(255,193,7,0.12); }
+        input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+        .rarity-tag { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; background: #222; margin-left: auto; border: 1px solid var(--border); }
+        .controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 25px 0 20px; }
+        .roll-btn { background: linear-gradient(135deg, var(--accent), #ffdb6e); color: #0a0c14; border: none; padding: 16px 32px; font-size: 1.15rem; font-weight: 800; border-radius: 10px; cursor: pointer; transition: var(--transition); box-shadow: 0 6px 25px rgba(255,193,7,0.45); animation: pulse 2.5s infinite; }
+        @keyframes pulse { 0%{box-shadow:0 6px 25px rgba(255,193,7,0.45),0 0 0 0 rgba(255,193,7,0.3)} 70%{box-shadow:0 6px 25px rgba(255,193,7,0.45),0 0 0 15px rgba(255,193,7,0)} 100%{box-shadow:0 6px 25px rgba(255,193,7,0.45),0 0 0 0 rgba(255,193,7,0)} }
+        .roll-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 35px rgba(255,193,7,0.6); animation: none; }
+        .roll-btn:active { transform: translateY(1px) scale(0.98); }
+        .reset-btn { background: transparent; border: 2px solid var(--border); color: var(--text); padding: 16px 24px; border-radius: 10px; cursor: pointer; transition: var(--transition); font-weight: 500; }
+        .reset-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+        .error { text-align: center; color: var(--red); padding: 12px; background: rgba(255,77,77,0.12); border-radius: 8px; display: none; margin-bottom: 18px; border: 1px solid rgba(255,77,77,0.3); }
+        
+        /* === КРАСИВЫЙ ВЫВОД РЕЗУЛЬТАТА === */
+        .result { 
+            background: var(--bg-card); 
+            border: 2px solid var(--accent); 
+            padding: 25px; 
+            border-radius: 12px; 
+            text-align: center; 
+            display: none; 
+            animation: fadeIn 0.4s;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        .result.show { display: block; }
+        .result h2 { color: var(--accent); margin-bottom: 20px; font-size: 1.5rem; }
+        .result p { font-size: 1.3rem; margin: 12px 0; }
+        .result span { font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .copy-btn { margin-top: 20px; background: #2a2d3a; color: var(--text); border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; transition: var(--transition); }
+        .copy-btn:hover { background: var(--accent); color: #0a0c14; transform: translateY(-2px); }
+        .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 1000; animation: confettiFall 3s ease-out forwards; }
+        @keyframes confettiFall { 0%{transform:translateY(-10px)rotate(0deg);opacity:1} 100%{transform:translateY(100vh)rotate(720deg);opacity:0} }
+        @media (max-width: 600px) { .grid{grid-template-columns:1fr} h1{font-size:1.6rem} .roll-btn,.reset-btn{width:100%} }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-noise"></div>
+    <div class="bg-gradient"></div>
+    <div class="container">
+        <header>
+            <h1>🎲 Brawl Stars Рандомайзер</h1>
+            <p class="subtitle">101 бравлер • 15 режимов • 100+ карт • Синхронизация редкостей</p>
+        </header>
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-header"><span class="panel-title">💎 Редкости</span>
+                    <div class="bulk-controls">
+                        <button class="bulk-btn" onclick="bulkToggle('rarity', true)">✓ Все</button>
+                        <button class="bulk-btn" onclick="bulkToggle('rarity', false)"> Ничего</button>
+                    </div>
+                </div>
+                <div id="rarity-filters" class="filters"></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="panel-title">🦸 Бравлеры</span>
+                    <div class="bulk-controls">
+                        <button class="bulk-btn" onclick="bulkToggle('brawler', true)">✓ Все</button>
+                        <button class="bulk-btn" onclick="bulkToggle('brawler', false)">✗ Ничего</button>
+                    </div>
+                </div>
+                <div class="search-box"><input type="text" id="brawler-search" placeholder="Поиск..." oninput="renderBrawlers()"></div>
+                <div id="brawler-filters" class="filters"></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="panel-title">🕹️ Режимы</span>
+                    <div class="bulk-controls">
+                        <button class="bulk-btn" onclick="bulkToggle('mode', true)">✓ Все</button>
+                        <button class="bulk-btn" onclick="bulkToggle('mode', false)">✗ Ничего</button>
+                    </div>
+                </div>
+                <div id="mode-filters" class="filters"></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><span class="panel-title">🗺️ Карты</span>
+                    <div class="bulk-controls">
+                        <button class="bulk-btn" onclick="bulkToggle('map', true)">✓ Все</button>
+                        <button class="bulk-btn" onclick="bulkToggle('map', false)"> Ничего</button>
+                    </div>
+                </div>
+                <div class="search-box"><input type="text" id="map-search" placeholder="Поиск..." oninput="renderMaps()"></div>
+                <div id="map-filters" class="filters"></div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="roll-btn" onclick="roll()">🎲 РОЛЛАНУТЬ</button>
+            <button class="reset-btn" onclick="resetAll()">♻️ Сбросить всё</button>
+        </div>
+        <p class="error" id="error-msg">⚠️ Выбери хотя бы одного бравлера, один режим и одну карту!</p>
+        
+        <!-- КРАСИВЫЙ ВЫВОД КАК В ПЕРВОМ КОДЕ -->
+        <div class="result" id="result-block">
+            <h2>🔥 Твоя комбинация:</h2>
+            <p>Бравлер: <span id="res-brawler"></span></p>
+            <p>Режим: <span id="res-mode"></span></p>
+            <p>Карта: <span id="res-map"></span></p>
+            <button class="copy-btn" onclick="copyResult()">📋 Скопировать для видео</button>
+        </div>
+    </div>
+    <script>
+const RARITIES = ["Начальный", "Редкий", "Сверхредкий", "Эпический", "Мифический", "Легендарный", "Ультра-легендарный"];
+const BRAWLERS = [
+    {n:"Шелли", r:"Начальный"},
+    {n:"Кольт", r:"Редкий"}, {n:"Булл", r:"Редкий"}, {n:"Брок", r:"Редкий"}, {n:"Барли", r:"Редкий"}, {n:"Нита", r:"Редкий"}, {n:"Эль Примо", r:"Редкий"}, {n:"Поко", r:"Редкий"}, {n:"Роза", r:"Редкий"},
+    {n:"Рико", r:"Сверхредкий"}, {n:"Джесси", r:"Сверхредкий"}, {n:"Динамайк", r:"Сверхредкий"}, {n:"Дэррил", r:"Сверхредкий"}, {n:"Пенни", r:"Сверхредкий"}, {n:"Тик", r:"Сверхредкий"}, {n:"Карл", r:"Сверхредкий"}, {n:"8-БИТ", r:"Сверхредкий"}, {n:"Джеки", r:"Сверхредкий"}, {n:"Гас", r:"Сверхредкий"},
+    {n:"Бо", r:"Эпический"}, {n:"Пайпер", r:"Эпический"}, {n:"Пэм", r:"Эпический"}, {n:"Фрэнк", r:"Эпический"}, {n:"Биби", r:"Эпический"}, {n:"Беа", r:"Эпический"}, {n:"Эмз", r:"Эпический"}, {n:"Гейл", r:"Эпический"}, {n:"Нани", r:"Эпический"}, {n:"Колетт", r:"Эпический"}, {n:"Эдгар", r:"Эпический"}, {n:"Сту", r:"Эпический"}, {n:"Белль", r:"Эпический"}, {n:"Гром", r:"Эпический"}, {n:"Грифф", r:"Эпический"}, {n:"Эш", r:"Эпический"}, {n:"Лола", r:"Эпический"}, {n:"Бонни", r:"Эпический"}, {n:"Сэм", r:"Эпический"}, {n:"Мэнди", r:"Эпический"}, {n:"Мэйси", r:"Эпический"}, {n:"Хэнк", r:"Эпический"}, {n:"Перл", r:"Эпический"}, {n:"Ларри и Лори", r:"Эпический"}, {n:"Анджело", r:"Эпический"}, {n:"Берри", r:"Эпический"}, {n:"Шейд", r:"Эпический"}, {n:"Мипл", r:"Эпический"}, {n:"Транк", r:"Эпический"},
+    {n:"Мортис", r:"Мифический"}, {n:"Тара", r:"Мифический"}, {n:"Джин", r:"Мифический"}, {n:"Мистер П.", r:"Мифический"}, {n:"Макс", r:"Мифический"}, {n:"Спраут", r:"Мифический"}, {n:"Лу", r:"Мифический"}, {n:"Байрон", r:"Мифический"}, {n:"Шеф", r:"Мифический"}, {n:"Скуик", r:"Мифический"}, {n:"Базз", r:"Мифический"}, {n:"Фэнг", r:"Мифический"}, {n:"Ив", r:"Мифический"}, {n:"Джанет", r:"Мифический"}, {n:"Отис", r:"Мифический"}, {n:"Бастер", r:"Мифический"}, {n:"Грей", r:"Мифический"}, {n:"Р-Т", r:"Мифический"}, {n:"Уиллоу", r:"Мифический"}, {n:"Даг", r:"Мифический"}, {n:"Чак", r:"Мифический"}, {n:"Чарли", r:"Мифический"}, {n:"Мико", r:"Мифический"}, {n:"Мелоди", r:"Мифический"}, {n:"Лили", r:"Мифический"}, {n:"Клэнси", r:"Мифический"}, {n:"Мо", r:"Мифический"}, {n:"Джуджу", r:"Мифический"}, {n:"Олли", r:"Мифический"}, {n:"Люми", r:"Мифический"}, {n:"Финкс", r:"Мифический"}, {n:"Дже-Йонг", r:"Мифический"}, {n:"Элли", r:"Мифический"}, {n:"Мина", r:"Мифический"}, {n:"Зигги", r:"Мифический"}, {n:"Джиджи", r:"Мифический"}, {n:"Глоуберт", r:"Мифический"}, {n:"Наджа", r:"Мифический"},
+    {n:"Спайк", r:"Легендарный"}, {n:"Кроу", r:"Легендарный"}, {n:"Леон", r:"Легендарный"}, {n:"Сэнди", r:"Легендарный"}, {n:"Сёрж", r:"Легендарный"}, {n:"Эмбер", r:"Легендарный"}, {n:"Мэг", r:"Легендарный"}, {n:"Честер", r:"Легендарный"}, {n:"Корделиус", r:"Легендарный"}, {n:"Кит", r:"Легендарный"}, {n:"Драко", r:"Легендарный"}, {n:"Кендзи", r:"Легендарный"}, {n:"Пирс", r:"Легендарный"},
+    {n:"Казе", r:"Ультра-легендарный"}, {n:"Сириус", r:"Ультра-легендарный"}
+];
+const MODES = [
+    {name:"Одиночное столкновение", maps:["Гейтед Комьюнити", "Асид Лейкс", "Молтен ту зе Кор", "Мейкшифт Скаффолдинг", "Скалл Крик", "Сейфти Сентер", "Твистинг Вайнс", "Трут", "Лилипонд Гроув", "Флаинг Фэнтези", "Фист ор Фэмин", "Крокет", "Старфрут Супернова", "Каверн Чёрн", "Кор оф Орбит", "Кристал Ай Касл", "Дабл Трабл", "Лотус", "Норт Парк Стэйшн", "Ринг о Бравлин", "Роквол Бравл", "Сикер", "Вейвформ"]},
+    {name:"Парное столкновение", maps:["Гейтед Комьюнити", "Асид Лейкс", "Молтен ту зе Кор", "Мейкшифт Скаффолдинг", "Скалл Крик", "Сейфти Сентер", "Твистинг Вайнс", "Трут", "Лилипонд Гроув", "Флаинг Фэнтези", "Фист ор Фэмин", "Крокет", "Старфрут Супернова", "Каверн Чёрн", "Кор оф Орбит", "Кристал Ай Касл", "Дабл Трабл", "Файнал Фор", "Лотус", "Норт Парк Стэйшн", "Роквол Бравл", "Сикер", "Вейвформ"]},
+    {name:"Броулбол", maps:["Бич Болл", "Бэкъярд Боул", "Спайралинг Аут", "Но Гуд Дид", "Трипл Дриббл", "Гоулиз", "Санни Соккер", "Сники Филдс", "Сайдтрэк", "Нагмег", "Сингд Эрс", "Пинхол Пант", "Пинбол Дримс", "Пауэр Шот", "Сентер Стейдж", "Флют Чютс", "Грэб зе Момент", "Грасс Нот", "Матч 1123581321", "Прайслесс Кактус", "Руфтоп Раннерс"]},
+    {name:"Захват кристаллов", maps:["Дабл Свуш", "Дэткэп Трэп", "Он э Ролл", "Кристал Аркейд", "Андермайн", "Сатоми Спрингс", "Опен Спейс", "Пикчереск", "Рейлрод Роббери", "Фортресс Фолл", "Хард Рок Майн", "Джем Форт", "Снейк Пит", "Сторэдж Сектор", "Афтепарти", "ATLAS", "Экстрим Ноншаланс", "Лилигир Лейк", "Локал Ресторантс", "Растик Аркейд", "Виспер Вейл"]},
+    {name:"Ограбление", maps:["Перпетуал Моушн", "Квинтиллион", "Хот Потейто", "Сейф Зон", "Тьюнинг Форк", "Аридити", "Кэнт тач зис", "Ол Тингс Викед", "Бридж Ту Фар", "Корнер Кейв", "GG 2.0", "Кабум Каньон", "Фотик Дум", "Пит Стоп", "Плейн Текст", "Сабвэй Тёрферс", "Зип Зап Зум"]},
+    {name:"Горячая Зона", maps:["Дуэлинг Битлс", "Опен Бизнесс", "Гиацинт Хаус", "Тэкс Ивейжн", "Голден Бэй", "Параллел Плэйс", "Зе Севен Пилларс оф Хьюманити", "Абракадабра", "Бэк Шаффл", "Фишинг Бед", "Ин зе Лиминал", "Джаст Аназер Рейс Ту Энивер", "Опен Зон", "Плеймейкер", "Ринг оф Файр", "Тикет ту Дай", "Зон Сплиттинг"]},
+    {name:"Награда за поимку", maps:["Драй Сизон", "Хит энд Ран", "Шутинг Стар", "Хорал Чэмберс", "Лейер Кейк", "Уотермелонс", "Хайдаут", "Но Экскьюзес", "Брейс фор Импакт", "Донт тёрн араунд", "Сайд бай Сайд", "Старрбёрст", "Вол Хаггинг"]},
+    {name:"Нокаут", maps:[
+        // ВСТАВЬ СЮДА ТОЧНЫЕ НАЗВАНИЯ ИЗ ТЕЛЕГРАМ-ГОЛОСОВАНИЯ
+        "Четыре уровня", "Новые горизонты", "Размумный комромисс", "В чистом поле", "Свежий взгляд", "Бурные Ключи", "Живописный утёс", "Ущелье Золотой руки", "Клешни краба", "Первый ход", "В ловушке", "Коннакол", "Рыцарство", "Баллада о котлетках", "Вечеринка для тебя", "Зов воды", "Думай наперёд", "Безыменные улицы", "Двухэтажка", "X означает...",
+    ]},
+    {name:"Уничтожение", maps:["Палетт Хангаут", "Хелло Олвейс Эндс виз э Гудбай", "Ту Гиммики 2", "ВОКИНГ ОН ХОТ СЭНД", "Катакомбы", "Дэтмэтч", "Паунд оф Масс", "Тайм Флайс", "Твентифайв ту Ту", "Вандерленд"]},
+    {name:"Баскетбой", maps:["Трипл-Дабл", "Слэм Данк", "Тёрновер", "Покет Пасс", "Элли-Уп", "Бол Хог", "Риверсал"]},
+    {name:"Волейбой", maps:["Блок Парти", "Флоутер", "Джангл Бол", "Панкейк", "Пауэр Элли", "Стронг Сайд", "Тайгер Леп"]},
+    {name:"Дуэли", maps:["Флеринг Феникс", "Зе Грейт Майти Лу", "Но Сюррендер", "Сёрч энд Дестрой", "Паралисис Пен", "Шраудинг Сёрпент", "Джампскейр Лейр", "Коин Флип", "Манки Мейз", "Ворриорс Вэй"]},
+    {name:"Бой 5 на 5", maps:["Джёрни оф э Таузенд Степс", "Крещендо", "Растремайнд", "Бравлерверс", "Сёрпентшрайн Айлэнд", "Сёрвайвл оф зе Минест", "Зе Эмптинесс Машин", "Анхаппи Арена"]},
+    {name:"Войны духов", maps:["Абиссал Ассолт", "Селестиал Крусейд", "Дивайн Десент", "Файнал Фронтир", "Хеллиш Харвест", "Инфернал Инвейжн", "Рэдиант Рэмпейдж", "Андерворлд Апрайзинг"]},
+    {name:"Бrawl-хоккей", maps:["Кэбин Фивер", "Тип Тоу", "Белоу Зиро", "Баунси Боул", "Гиперспейс", "H из Холлидей", "Слиппери Слэп", "Супер Сентер", "Кул Бокс", "Старр Гарден"]}
+];
+
+let filters = {rarity:{}, brawler:{}, mode:{}, map:{}};
+let audioCtx = null;
+
+function init() {
+    RARITIES.forEach(r => filters.rarity[r] = true);
+    BRAWLERS.forEach(b => filters.brawler[b.n] = true);
+    MODES.forEach(m => { filters.mode[m.name] = true; m.maps.forEach(map => filters.map[map] = true); });
+    renderAll(); initParticles(); initAudio();
+}
+
+function initAudio() { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+function playSound() { if(!audioCtx) return; const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.type='sine'; o.frequency.setValueAtTime(440,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(880,audioCtx.currentTime+0.15); g.gain.setValueAtTime(0.15,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.25); o.start(); o.stop(audioCtx.currentTime+0.25); }
+
+function initParticles() {
+    const c=document.getElementById('bg-canvas'), ctx=c.getContext('2d'); let p=[], w, h;
+    function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;} window.addEventListener('resize',resize); resize();
+    for(let i=0;i<60;i++) p.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,s:Math.random()*2+0.5,o:Math.random()*0.4+0.1,h:Math.random()*60+300});
+    (function draw(){ctx.clearRect(0,0,w,h); p.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy; if(pt.x<0||pt.x>w)pt.vx*=-1; if(pt.y<0||pt.y>h)pt.vy*=-1; ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.s,0,Math.PI*2); ctx.fillStyle=`hsla(${pt.h},70%,65%,${pt.o})`; ctx.fill();});
+    p.forEach((a,i)=>p.slice(i+1).forEach(b=>{const dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy); if(d<120){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(255,193,7,${0.08*(1-d/120)})`;ctx.lineWidth=0.5;ctx.stroke();}})); requestAnimationFrame(draw);})();
+}
+
+function createConfetti() {
+    const cols=['#ffc107','#9d5cff','#4caf50','#ff4d4d','#00bcd4'];
+    for(let i=0;i<40;i++){const e=document.createElement('div');e.className='confetti';e.style.left=Math.random()*100+'vw';e.style.backgroundColor=cols[Math.floor(Math.random()*cols.length)];e.style.borderRadius=Math.random()>0.5?'50%':'2px';e.style.animationDuration=(2+Math.random()*2)+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),3000);}
+}
+
+function renderAll(){renderRarities();renderBrawlers();renderModes();renderMaps();}
+function renderRarities(){document.getElementById('rarity-filters').innerHTML=RARITIES.map(r=>`<label class="${filters.rarity[r]?'checked':''}"><input type="checkbox" ${filters.rarity[r]?'checked':''} onchange="toggleRarity('${r}')"> ${r}</label>`).join('');}
+function renderBrawlers(){
+    const s=document.getElementById('brawler-search').value.toLowerCase();
+    const f=BRAWLERS.filter(b=>b.n.toLowerCase().includes(s));
+    const g={}; f.forEach(b=>{if(!g[b.r])g[b.r]=[]; g[b.r].push(b);});
+    document.getElementById('brawler-filters').innerHTML=RARITIES.map(r=>{if(!g[r])return'';return `<div style="margin:8px 0 4px;color:var(--text-dim);font-size:0.8rem;font-weight:600">${r}</div>`+g[r].map(b=>`<label class="${filters.brawler[b.n]?'checked':''}"><input type="checkbox" ${filters.brawler[b.n]?'checked':''} onchange="toggle('brawler','${b.n}')"> ${b.n} <span class="rarity-tag">${b.r}</span></label>`).join('');}).join('');
+}
+function renderModes(){document.getElementById('mode-filters').innerHTML=MODES.map(m=>`<label class="${filters.mode[m.name]?'checked':''}"><input type="checkbox" ${filters.mode[m.name]?'checked':''} onchange="toggleMode('${m.name}')"> ${m.name}</label>`).join('');}
+function renderMaps(){
+    const s=document.getElementById('map-search').value.toLowerCase();
+    const active=MODES.filter(m=>filters.mode[m.name]).map(m=>m.name);
+    const all=MODES.flatMap(m=>m.maps.map(mp=>({n:mp,mod:m.name})));
+    const f=all.filter(i=>i.n.toLowerCase().includes(s)&&(active.length===0||active.includes(i.mod)));
+    const g={}; f.forEach(i=>{if(!g[i.mod])g[i.mod]=[]; g[i.mod].push(i.n);});
+    document.getElementById('map-filters').innerHTML=Object.entries(g).map(([mod,maps])=>`<div style="margin:8px 0 4px;color:var(--text-dim);font-size:0.8rem;font-weight:600">${mod}</div>`+maps.map(mp=>`<label class="${!filters.mode[mod]?'disabled':''} ${filters.map[mp]?'checked':''}"><input type="checkbox" ${filters.map[mp]?'checked':''} ${!filters.mode[mod]?'disabled':''} onchange="toggle('map','${mp}')"> ${mp}</label>`).join('')).join('');
+}
+
+function toggleRarity(r){
+    const st=!filters.rarity[r];
+    filters.rarity[r]=st;
+    BRAWLERS.forEach(b=>{if(b.r===r) filters.brawler[b.n]=st;});
+    renderAll();
+}
+function toggle(t,k){
+    filters[t][k]=!filters[t][k];
+    if(t==='mode') MODES.find(m=>m.name===k)?.maps.forEach(mp=>filters.map[mp]=filters.mode[k]);
+    if(t==='brawler') renderBrawlers();
+    if(t==='map') renderMaps();
+}
+function toggleMode(m){filters.mode[m]=!filters.mode[m]; MODES.find(x=>x.name===m)?.maps.forEach(mp=>filters.map[mp]=filters.mode[m]); renderMaps();}
+function bulkToggle(t,v){Object.keys(filters[t]).forEach(k=>filters[t][k]=v); if(t==='mode') MODES.forEach(m=>{if(filters.mode[m.name]) m.maps.forEach(mp=>filters.map[mp]=true);}); renderAll();}
+
+function roll(){
+    const ab=BRAWLERS.filter(b=>filters.brawler[b.n]);
+    const am=MODES.filter(m=>filters.mode[m.name]);
+    let ac=[]; am.forEach(m=>m.maps.forEach(mp=>{if(filters.map[mp]) ac.push({n:mp,mod:m.name});}));
+    const err=document.getElementById('error-msg'), res=document.getElementById('result-block');
+    if(!ab.length||!am.length||!ac.length){err.style.display='block';res.classList.remove('show');return;}
+    err.style.display='none';
+    playSound();
+    const b=ab[Math.floor(Math.random()*ab.length)];
+    const mode=am[Math.floor(Math.random()*am.length)];
+    const mm=ac.filter(x=>x.mod===mode.name);
+    const map=mm.length?mm[Math.floor(Math.random()*mm.length)]:ac[Math.floor(Math.random()*ac.length)];
+    document.getElementById('res-brawler').textContent=`${b.n} (${b.r})`;
+    document.getElementById('res-mode').textContent=mode.name;
+    document.getElementById('res-map').textContent=map.n;
+    res.classList.add('show'); createConfetti();
+}
+function resetAll(){RARITIES.forEach(r=>filters.rarity[r]=true); BRAWLERS.forEach(b=>filters.brawler[b.n]=true); MODES.forEach(m=>{filters.mode[m.name]=true; m.maps.forEach(mp=>filters.map[mp]=true);}); document.getElementById('brawler-search').value=''; document.getElementById('map-search').value=''; renderAll(); document.getElementById('result-block').classList.remove('show'); document.getElementById('error-msg').style.display='none';}
+function copyResult(){const t=`🎲 BS Рандом:\n👤 ${document.getElementById('res-brawler').textContent}\n🕹️ ${document.getElementById('res-mode').textContent}\n🗺️ ${document.getElementById('res-map').textContent}`; navigator.clipboard.writeText(t).then(()=>{const b=document.querySelector('.copy-btn'),o=b.innerHTML; b.innerHTML='✅ Скопировано!'; setTimeout(()=>b.innerHTML=o,1500);});}
+init();
+    </script>
+</body>
+</html>
